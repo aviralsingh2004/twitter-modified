@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
 
 // models
-// import Notification from "../models/notification.model.js";
+import Notification from "../models/notification.model.js";
 import User from "../models/user.model.js";
 
 export const getUserProfile = async (req, res) => {
@@ -113,7 +113,7 @@ export const updateUser = async (req, res) => {
 			user.password = await bcrypt.hash(newPassword, salt);
 		}
 
-		if (profileImg) {
+		if (profileImg) { 
 			if (user.profileImg) {
 				// https://res.cloudinary.com/dyfqon1v6/image/upload/v1712997552/zmxorcxexpdbh8r0bkjb.png
 				await cloudinary.uploader.destroy(user.profileImg.split("/").pop().split(".")[0]);
