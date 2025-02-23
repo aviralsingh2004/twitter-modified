@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-hot-toast"
 import LoadingSpinner from "./LoadingSpinner";
+import { formatPostDate } from "../../utils/date";
 const Post = ({ post }) => {
 	const [comment, setComment] = useState("");
 	const {data:authUser} = useQuery({queryKey: ["authUser"]});
@@ -17,7 +18,7 @@ const Post = ({ post }) => {
 
 	const isMyPost = authUser._id === post.user._id;
 
-	const formattedDate = 2020;
+	const formattedDate = formatPostDate(post.createdAt);
 
 	const {mutate: deletePost, isPending: isDeleting } = useMutation({
 		mutationFn: async () => {
@@ -57,10 +58,13 @@ const Post = ({ post }) => {
 			}
 		},
 		onSuccess: (updateLikes) => {
+			// this is not the best UX, bc it will refetch all posts ( queryClient.invalidate method)
+			// queryClient.invalidateQueries({ queryKey : ["posts"]})
+			// instead, update the cache directly for that posts by sending the number of likes on the post from backend to update it on the frontend as you can see that updated likes has been returned by our json response which is updated in the ui by this method
 			queryClient.setQueryData(["posts"], (oldData)=> {
 				return oldData.map((p)=>{
 					if (p._id === post._id) {
-						return {...p, likes: updatedLikes};
+						return {...p, likes: updateLikes};
 					}
 					return p;
 				});
@@ -90,10 +94,18 @@ const Post = ({ post }) => {
 				throw new Error(error);
 			}
 		},
-		onSuccess: () => {
+		onSuccess: (post) => {
 			toast.success("Comment posted successfully");
 			setComment("");
-			queryClient.invalidateQueries({ queryKey: ["posts"]});
+			// queryClient.invalidateQueries({ queryKey: ["posts"]});
+			queryClient.setQueryData(["posts"],(oldData)=>{
+				return oldData.map((p) => {
+					if(p._id == post._id){
+						return {...p, comments:post.comments}
+					}
+					return p;
+				});
+			});
 		},
 		onError: (error) => {
 			toast.error(error.message);
@@ -135,7 +147,11 @@ const Post = ({ post }) => {
 						</span>
 						{isMyPost && (
 							<span className='flex justify-end flex-1'>
+								{!isDeleting && (
 								<FaTrash className='cursor-pointer hover:text-red-500' onClick={handleDeletePost} />
+								)}
+
+								{isDeleting && <LoadingSpinner size='sm' />}
 							</span>
 						)}
 					</div>
@@ -203,7 +219,7 @@ const Post = ({ post }) => {
 										/>
 										<button className='btn btn-primary rounded-full btn-sm text-white px-4'>
 											{isCommenting ? (
-												<span className='loading loading-spinner loading-md'></span>
+												<LoadingSpinner size='md' />
 											) : (
 												"Post"
 											)}
@@ -219,10 +235,13 @@ const Post = ({ post }) => {
 								<span className='text-sm text-slate-500 group-hover:text-green-500'>0</span>
 							</div>
 							<div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-								{!isLiked && (
+								{isLiking && <LoadingSpinner size='sm' />}
+								{!isLiked && !isLiking && (
 									<FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />
 								)}
-								{isLiked && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
+								{isLiked &&  !isLiking && (
+									<FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />
+								)}
 
 								<span
 									className={`text-sm text-slate-500 group-hover:text-pink-500 ${
