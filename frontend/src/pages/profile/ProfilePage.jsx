@@ -13,6 +13,8 @@ import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import useFollow from "../../hooks/useFollow";
 import { useQuery } from "@tanstack/react-query";
+import { formatMemberSinceDate } from "../../utils/date";
+import useUpdateUserProfile from "../../hooks/useUpdateUserProfile";
 
 const ProfilePage = () => {
 	const [coverImg, setCoverImg] = useState(null);
@@ -47,8 +49,10 @@ const ProfilePage = () => {
 			}
 		},
 	});
+	const { isUpdatingProfile, updateProfile } = useUpdateUserProfile();
 
 	const isMyProfile = authUser._id === user?._id;
+	const memberSinceDate = formatMemberSinceDate(user?.createdAt);
 	const amIFollowing = authUser?.following.includes(user?._id);
 
 	const handleImgChange = (e, state) => {
@@ -65,6 +69,7 @@ const ProfilePage = () => {
 	useEffect(()=> {
 		refetch();
 	}, [username,refetch]);
+
 	return (
 		<>
 			<div className='flex-[4_4_0]  border-r border-gray-700 min-h-screen '>
@@ -80,7 +85,7 @@ const ProfilePage = () => {
 								</Link>
 								<div className='flex flex-col'>
 									<p className='font-bold text-lg'>{user?.fullName}</p>
-									<span className='text-sm text-slate-500'>{POSTS?.length} posts</span>
+									<span className='text-sm text-slate-500'>{Posts?.length} posts</span>
 								</div>
 							</div>
 							{/* COVER IMG */}
@@ -179,7 +184,7 @@ const ProfilePage = () => {
 									)}
 									<div className='flex gap-2 items-center'>
 										<IoCalendarOutline className='w-4 h-4 text-slate-500' />
-										<span className='text-sm text-slate-500'>Joined July 2021</span>
+										<span className='text-sm text-slate-500'>{memberSinceDate}</span>
 									</div>
 								</div>
 								<div className='flex gap-2'>

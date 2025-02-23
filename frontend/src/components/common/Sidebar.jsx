@@ -32,9 +32,9 @@ const Sidebar = () => {
 			// refetch the authUser so that it does'nt have authUser and redirect to login page
 			queryClient.invalidateQueries({queryKey:["authUser"]});a
 		},
-		onError:() => {
-			toast.error("Logout failed");
-		},
+		// onError:() => {
+		// 	toast.error("Logout failed");
+		// },
 	})
 	const {data} = useQuery({queryKey:["authUser"]});
 
